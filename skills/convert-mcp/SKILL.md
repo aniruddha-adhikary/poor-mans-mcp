@@ -3,11 +3,11 @@ name: convert-mcp
 description: "Convert any MCP server into a Claude Code plugin that uses mcpc CLI for tool calls. Use this skill whenever the user wants to connect to an MCP server via mcpc, probe an MCP server's capabilities, create a plugin from an MCP server, port an existing MCP plugin to use mcpc, or says things like 'connect to this MCP', 'make this MCP work without direct MCP support', 'convert this MCP to a plugin', 'probe this MCP server', or provides an MCP server URL. Also use when the user mentions mcpc setup, MCP authentication issues, or wants CLI access to MCP tools. Even if the user just says 'I want to use X MCP server' without mentioning mcpc or plugins, this skill likely applies."
 ---
 
-# Convert MCP Server to mcpc Plugin
+# Convert MCP Server to mcpc Skills
 
-Turn any MCP server into a Claude Code plugin that works through the `mcpc` CLI — useful when your environment doesn't support direct MCP connections, when you want shell-scriptable MCP access, or when you want to package MCP capabilities as reusable skills.
+Turn any MCP server into reusable skills that work through the `mcpc` CLI — useful when your environment doesn't support direct MCP connections, when you want shell-scriptable MCP access, or when you want to make MCP tools available to any coding agent.
 
-The approach: instead of Claude calling MCP tools directly, the plugin's skills instruct Claude to call them via `mcpc @session tools-call <name>` through the Bash tool. The MCP protocol is the same underneath — mcpc handles the JSON-RPC, sessions, and auth — but the skill layer makes it work anywhere you have a terminal.
+The approach: instead of Claude calling MCP tools directly, the skills instruct Claude to call them via `mcpc @session tools-call <name>` through the Bash tool. The MCP protocol is the same underneath — mcpc handles the JSON-RPC, sessions, and auth — but the skill layer makes it work anywhere you have a terminal.
 
 ## Prerequisites
 
@@ -15,13 +15,17 @@ The approach: instead of Claude calling MCP tools directly, the plugin's skills 
 
 ## Overview
 
-5 phases, each building on the last:
+4 phases, each building on the last:
 
 1. **Probe** — Find the server, figure out auth, get connected
 2. **Discover** — Map out all tools, resources, and prompts
 3. **Test** — Call tools to verify everything works (and learn quirks)
-4. **Create Plugin** — Package what you learned into a Claude Code plugin
-5. **Port Existing Skills** (optional) — If an official plugin exists, adapt its skills for mcpc
+4. **Create Skills** — Write skills into the project so Claude can use them
+
+Optional extra phases (only when the user asks, or provides an existing plugin to convert):
+
+5. **Create Plugin** (optional) — Package skills as a standalone Claude Code plugin for distribution
+6. **Port Existing Plugin** (optional) — If an official MCP plugin exists, adapt its skills for mcpc
 
 ---
 
@@ -244,61 +248,36 @@ For each tool, note:
 
 ---
 
-## Phase 4: Create Plugin
+## Phase 4: Create Skills
 
-### 4.1 Choose where to create skills
+Create skills directly in the project. Skills in `.claude/skills/` auto-load in Claude Code — no plugin install needed. Skills in `.agents/skills/` work with other agents (Codex, Gemini CLI, etc.).
 
-**Default: project-local skills** — these load automatically in the current project:
+### 4.1 Directory structure
+
 ```
 <project>/
 ├── .claude/
 │   └── skills/
 │       ├── <server>-setup/
-│       │   └── SKILL.md
+│       │   └── SKILL.md          # Auth & connection instructions
 │       └── <capability-group>/
-│           ├── SKILL.md
+│           ├── SKILL.md          # Skill for related tools
 │           └── references/
-│               └── patterns.md
+│               └── patterns.md   # Detailed reference docs (if needed)
 └── .agents/
     └── skills/
-        ├── <server>-setup.md      # Universal agents format
+        ├── <server>-setup.md     # Universal agents format
         └── <capability-group>.md
 ```
 
-Skills in `.claude/skills/` are automatically available in the project — no `--plugin-dir` or `/plugin install` needed. Use this when the MCP integration is for this specific project.
-
-**Alternative: standalone plugin** — for sharing across projects or via marketplace:
-```
-my-mcp-plugin/
-├── .claude-plugin/
-│   └── plugin.json
-├── skills/
-│   └── ...
-└── .agents/
-    └── skills/
-        └── ...
-```
-
-Standalone plugins require `claude --plugin-dir ./my-mcp-plugin` or marketplace installation. Use this when packaging for distribution.
-
 ### 4.2 Create the setup skill
 
-Every mcpc integration needs a setup skill. This is the first thing users will need. Include:
+Every mcpc integration needs a setup skill documenting how to authenticate and connect. Include:
 - Prerequisites (`mcpc` installation)
 - Step-by-step auth flow (from Phase 1 — what actually worked)
 - Connection command with the exact session name
 - Verification command
 - Troubleshooting for common failures
-
-For standalone plugins, also create a manifest at `.claude-plugin/plugin.json`:
-```json
-{
-  "name": "<plugin-name>",
-  "description": "<what this plugin does> via mcpc CLI",
-  "version": "1.0.0",
-  "author": { "name": "<author>" }
-}
-```
 
 ### 4.3 Create capability skills
 
@@ -336,44 +315,76 @@ echo '{"key":"value"}' | mcpc @<session-name> tools-call <tool_name>
 
 ### 4.4 Copy to universal format
 
-For each SKILL.md, also create a copy at `.agents/skills/<skill-name>.md` so the plugin works with Codex, Gemini CLI, and other agents that read `.agents/skills/`.
+For each skill in `.claude/skills/<name>/SKILL.md`, also create a copy at `.agents/skills/<name>.md` for cross-agent compatibility.
 
-### 4.6 Test the plugin
+### 4.5 Verify
 
-```bash
-claude --plugin-dir ./my-mcp-plugin
-```
-
-Try each skill and verify tools get called correctly through mcpc.
+Start a new Claude Code session in the project and confirm the skills are loaded — they should appear in `/help` or trigger automatically when you mention the server.
 
 ---
 
-## Phase 5: Port Existing Skills (Optional)
+## Phase 5: Create Plugin (Optional)
+
+Only do this when the user explicitly wants a standalone plugin for distribution across projects or via marketplace. Ask the user if they want this — don't do it by default.
+
+### 5.1 Create plugin structure
+
+```bash
+mkdir -p <plugin-name>/{.claude-plugin,skills,.agents/skills}
+```
+
+### 5.2 Create manifest
+
+```json
+{
+  "name": "<plugin-name>",
+  "description": "<what this plugin does> via mcpc CLI",
+  "version": "1.0.0",
+  "author": { "name": "<author>" }
+}
+```
+
+Save as `<plugin-name>/.claude-plugin/plugin.json`.
+
+### 5.3 Move skills into the plugin
+
+Copy the skills from `.claude/skills/` into the plugin's `skills/` directory, and from `.agents/skills/` into the plugin's `.agents/skills/`.
+
+### 5.4 Test
+
+```bash
+claude --plugin-dir ./<plugin-name>
+```
+
+---
+
+## Phase 6: Port Existing Plugin (Optional)
+
+Only do this when the user provides an existing MCP plugin to convert, or asks to port one. Don't proactively suggest it.
 
 If there's already a Claude Code plugin for this MCP server (check the plugin marketplace or GitHub), you can port its skills instead of writing from scratch. This preserves battle-tested instructions and just changes the invocation layer.
 
-### 5.1 Copy and clean
+### 6.1 Copy and clean
 
 ```bash
 cp -r <existing-plugin-dir> <new-plugin-dir>
 rm -rf <new-plugin-dir>/.git <new-plugin-dir>/.github
 rm -f <new-plugin-dir>/.mcp.json      # Remove direct MCP config
-rm -f <new-plugin-dir>/figma-power/mcp.json  # Remove any nested MCP configs
 ```
 
-### 5.2 Update the manifest
+### 6.2 Update the manifest
 
 Edit `.claude-plugin/plugin.json` — new name, description mentioning mcpc.
 
-### 5.3 Add mcpc invocation blocks
+### 6.3 Add mcpc invocation blocks
 
-For every SKILL.md, insert the mcpc invocation block after the frontmatter. Prefix `[mcpc]` to each skill's description so users know it's the mcpc variant.
+For every SKILL.md, insert the mcpc invocation block after the frontmatter. Prefix `[mcpc]` to each skill's description.
 
-When there are many skills, use parallel subagents — one per skill or group of skills — to do this efficiently.
+When there are many skills, use parallel subagents — one per skill or group of skills.
 
-### 5.4 Replace MCP references
+### 6.4 Replace MCP references
 
-Search and replace across all `.md` files. Common patterns:
+Search and replace across all `.md` files:
 - `"<Server> MCP server must be connected"` → `"mcpc must be connected to <Server> (\`mcpc @<session>\`)"`
 - `"MCP tool"` / `"MCP tools"` → `"mcpc tool"` / `"mcpc tools"`
 - `"Call the MCP tool"` → `"Call via mcpc"`
@@ -383,21 +394,13 @@ Search and replace across all `.md` files. Common patterns:
 
 Use parallel subagents for large plugins with many files.
 
-### 5.5 Add setup skill
+### 6.5 Add setup skill and verify
 
-Create a setup skill with the auth flow from Phase 1 if one doesn't exist.
-
-### 5.6 Add universal format
-
-Copy skills to `.agents/skills/` for cross-agent compatibility.
-
-### 5.7 Verify no stale references
+Create a setup skill if one doesn't exist. Then check for stale references:
 
 ```bash
 grep -rn "MCP" skills/ --include="*.md" | grep -iv "mcpc"
 ```
-
-Review any remaining hits — some are legitimate (references to other MCP servers, product names like `figma-desktop`).
 
 ---
 
