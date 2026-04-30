@@ -22,6 +22,14 @@ The skill walks through a 5-phase process:
 npm install -g @apify/mcpc
 ```
 
+### Via skills.sh (works with 50+ agents)
+
+```bash
+npx skills add aniruddha-adhikary/poor-mans-mcp
+```
+
+Works with Claude Code, Cursor, Cline, OpenCode, and more.
+
 ### As a Claude Code plugin (from marketplace)
 
 ```
