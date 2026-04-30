@@ -1,0 +1,9 @@
+{
+  "name": "poor-mans-mcp",
+  "description": "Convert any MCP server into a Claude Code skill/plugin using mcpc CLI. For environments that don't support MCP directly, or when you want CLI-driven MCP access.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Aniruddha Adhikary"
+  }
+}
