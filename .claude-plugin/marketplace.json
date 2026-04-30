@@ -1,0 +1,16 @@
+{
+  "name": "poor-mans-mcp",
+  "owner": {
+    "name": "Aniruddha Adhikary",
+    "email": "stdkid.h@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "poor-mans-mcp",
+      "source": ".",
+      "description": "Convert any MCP server into a Claude Code skill/plugin using mcpc CLI. For environments that don't support MCP directly, or when you want CLI-driven MCP access.",
+      "category": "tools",
+      "homepage": "https://github.com/aniruddha-adhikary/poor-mans-mcp"
+    }
+  ]
+}

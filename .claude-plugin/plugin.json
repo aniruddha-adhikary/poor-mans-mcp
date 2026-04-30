@@ -5,5 +5,9 @@
   "license": "MIT",
   "author": {
     "name": "Aniruddha Adhikary"
+  },
+  "homepage": "https://github.com/aniruddha-adhikary/poor-mans-mcp",
+  "repository": {
+    "url": "https://github.com/aniruddha-adhikary/poor-mans-mcp"
   }
 }

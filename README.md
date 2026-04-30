@@ -22,15 +22,17 @@ The skill walks through a 5-phase process:
 npm install -g @apify/mcpc
 ```
 
-### As a Claude Code plugin
+### As a Claude Code plugin (from marketplace)
+
+```
+/plugin marketplace add https://github.com/aniruddha-adhikary/poor-mans-mcp.git
+/plugin install poor-mans-mcp
+```
+
+### As a Claude Code plugin (local)
 
 ```bash
 claude --plugin-dir /path/to/poor-mans-mcp
-```
-
-Or install from a marketplace if available:
-```
-/plugin install poor-mans-mcp
 ```
 
 ### As a standalone skill
