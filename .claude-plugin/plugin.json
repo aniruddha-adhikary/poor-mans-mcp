@@ -7,7 +7,5 @@
     "name": "Aniruddha Adhikary"
   },
   "homepage": "https://github.com/aniruddha-adhikary/poor-mans-mcp",
-  "repository": {
-    "url": "https://github.com/aniruddha-adhikary/poor-mans-mcp"
-  }
+  "repository": "https://github.com/aniruddha-adhikary/poor-mans-mcp"
 }
