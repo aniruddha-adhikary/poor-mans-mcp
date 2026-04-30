@@ -126,6 +126,13 @@ poor-mans-mcp/
 | Bearer token | `--header "Authorization: Bearer <PAT>"` | Personal access tokens |
 | Local stdio | Config file entry | Filesystem, database servers |
 
+## Gotchas
+
+Some MCP servers have undocumented restrictions on OAuth Dynamic Client Registration (DCR):
+
+- **Figma** allowlists the client name `"Claude Code (figma)"` — any other name returns 403. See [this discussion](https://github.com/anomalyco/opencode/issues/988#issuecomment-4022520800) for the workaround.
+- Other servers may have similar restrictions. If `mcpc login` fails with 403, try manual DCR with different client names or check the server's GitHub issues.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
