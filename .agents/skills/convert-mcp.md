@@ -246,31 +246,51 @@ For each tool, note:
 
 ## Phase 4: Create Plugin
 
-### 4.1 Directory structure
+### 4.1 Choose where to create skills
 
-Create both Claude Code plugin format and universal `.agents/skills/` format for maximum compatibility:
-
+**Default: project-local skills** — these load automatically in the current project:
 ```
-my-mcp-plugin/
-├── .claude-plugin/
-│   └── plugin.json              # Claude Code plugin manifest
-├── skills/
-│   ├── <server>-setup/
-│   │   └── SKILL.md             # Auth & connection instructions
-│   ├── <capability-group>/
-│   │   └── SKILL.md             # Skill for related tools
-│   └── <another-group>/
-│       ├── SKILL.md
-│       └── references/
-│           └── patterns.md      # Detailed reference docs
+<project>/
+├── .claude/
+│   └── skills/
+│       ├── <server>-setup/
+│       │   └── SKILL.md
+│       └── <capability-group>/
+│           ├── SKILL.md
+│           └── references/
+│               └── patterns.md
 └── .agents/
     └── skills/
-        ├── <server>-setup.md    # Same skills in universal format
+        ├── <server>-setup.md      # Universal agents format
         └── <capability-group>.md
 ```
 
-### 4.2 Create the manifest
+Skills in `.claude/skills/` are automatically available in the project — no `--plugin-dir` or `/plugin install` needed. Use this when the MCP integration is for this specific project.
 
+**Alternative: standalone plugin** — for sharing across projects or via marketplace:
+```
+my-mcp-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── skills/
+│   └── ...
+└── .agents/
+    └── skills/
+        └── ...
+```
+
+Standalone plugins require `claude --plugin-dir ./my-mcp-plugin` or marketplace installation. Use this when packaging for distribution.
+
+### 4.2 Create the setup skill
+
+Every mcpc integration needs a setup skill. This is the first thing users will need. Include:
+- Prerequisites (`mcpc` installation)
+- Step-by-step auth flow (from Phase 1 — what actually worked)
+- Connection command with the exact session name
+- Verification command
+- Troubleshooting for common failures
+
+For standalone plugins, also create a manifest at `.claude-plugin/plugin.json`:
 ```json
 {
   "name": "<plugin-name>",
@@ -280,16 +300,7 @@ my-mcp-plugin/
 }
 ```
 
-### 4.3 Create the setup skill
-
-Every mcpc plugin needs a setup skill. This is the first thing users will need. Include:
-- Prerequisites (`mcpc` installation)
-- Step-by-step auth flow (from Phase 1 — what actually worked)
-- Connection command with the exact session name
-- Verification command
-- Troubleshooting for common failures
-
-### 4.4 Create capability skills
+### 4.3 Create capability skills
 
 Group related tools into skills based on user intent, not 1:1 with tools. A "design reading" skill might cover `get_screenshot`, `get_metadata`, and `get_design_context` together because users reach for them as a group.
 
@@ -323,7 +334,7 @@ echo '{"key":"value"}' | mcpc @<session-name> tools-call <tool_name>
 
 **Reference docs** for detailed patterns — keep SKILL.md under ~500 lines and put detailed reference material in `references/` files.
 
-### 4.5 Copy to universal format
+### 4.4 Copy to universal format
 
 For each SKILL.md, also create a copy at `.agents/skills/<skill-name>.md` so the plugin works with Codex, Gemini CLI, and other agents that read `.agents/skills/`.
 
