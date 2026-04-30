@@ -2,6 +2,8 @@
 
 Convert any MCP server into a Claude Code plugin using [mcpc](https://github.com/apify/mcpc) CLI — for environments that don't support MCP directly, or when you want shell-scriptable MCP access.
 
+> The name is a riff on "poor man's cron" — the classic hack of using a loop or scheduled job to fake a real cron daemon. Same energy here: when you can't have real MCP, fake it with a CLI and a Bash tool.
+
 ## What this does
 
 Instead of Claude calling MCP tools directly, this plugin teaches Claude to call them via `mcpc @session tools-call <name>` through the Bash tool. The MCP protocol is the same underneath — mcpc handles JSON-RPC, sessions, and auth — but it works anywhere you have a terminal.
